@@ -1,9 +1,10 @@
 import {FlatList, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {Text} from 'react-native-paper';
 import {useApi} from '../../hooks/useApi';
 import {contactURL} from '../../constants/urls';
 import TextComponent from '../../components/TextComponent/TextComponent';
+import {useFocusEffect} from '@react-navigation/native';
 
 const HomeScreen = () => {
   const contactApi = useApi();
@@ -20,7 +21,7 @@ const HomeScreen = () => {
       });
 
       if (response.error) {
-        console.log('Error fetching contacts:', Response.error);
+        console.log('Error fetching contacts:', response.error);
       }
 
       if (response.data) {
@@ -34,17 +35,15 @@ const HomeScreen = () => {
     }
   };
 
-  useEffect(() => {
-    getContacts();
-
-    return () => {};
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getContacts();
+    }, [])
+  );
 
   return (
-    // <View className="w-full h-full flex items-center">
     <View className="w-full h-full flex p-4">
       <View className="w-full flex flex-row items-center justify-around gap-2 mb-2">
-        {/* Card */}
         <View className="w-2/5 h-32 bg-purple-400 rounded-lg flex items-center justify-center p-3">
           <Text
             variant={'bodyLarge'}
@@ -61,7 +60,7 @@ const HomeScreen = () => {
             style={{color: '#fff', fontWeight: 'bold', textAlign: 'center'}}>
             Connection Request
           </Text>
-          <Text style={{color: '#fff', fontWeight: 'bold'}}>40</Text>
+          <Text style={{color: '#fff', fontWeight: 'bold'}}>0</Text>
         </View>
       </View>
 
@@ -74,12 +73,13 @@ const HomeScreen = () => {
             <Text>
               {item.first_name} {item.last_name}
             </Text>
-            
           </View>
         )}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 100}}
+        refreshing={contactApi.loading}
+        onRefresh={getContacts}
       />
     </View>
   );

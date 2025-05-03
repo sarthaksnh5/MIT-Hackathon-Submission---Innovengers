@@ -1,4 +1,10 @@
-import {Image, ScrollView, TouchableOpacity, View} from 'react-native';
+import {
+  FlatList,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useState} from 'react';
 
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -18,6 +24,7 @@ const PlusScreen = ({navigation}) => {
   const linkedUseApi = useApi();
 
   const [linkedExtractedData, setLinkedExtractedData] = useState(null);
+  const [linkedProfiles, setLinkedProfiles] = useState([]);
 
   const [userData, setUserData] = useState({
     first_name: '',
@@ -107,6 +114,7 @@ const PlusScreen = ({navigation}) => {
         if (typeof processedData === 'string') {
           processedData = JSON.parse(processedData);
         }
+
         setUserData({
           ...userData,
           first_name: processedData.first_name || '',
@@ -160,7 +168,9 @@ const PlusScreen = ({navigation}) => {
         `${linkedURL}fetch_linkedin/`,
         'POST',
         {
-          username: userData.linkedin_username,
+          username: `${userData.first_name} ${userData.last_name}`,
+          company: userData.company,
+          job_title: userData.job_title,
         },
         {
           requireAuth: true,
@@ -176,7 +186,8 @@ const PlusScreen = ({navigation}) => {
 
       // Assuming the response contains the extracted data
       console.log(response.data);
-      setLinkedExtractedData(response.data);
+      // setLinkedExtractedData(response.data);
+      setLinkedProfiles(response.data);
     } catch (e) {
       console.log('Error extracting LinkedIn profile:', e);
     }
@@ -245,7 +256,8 @@ const PlusScreen = ({navigation}) => {
   };
 
   return (
-    <ScrollView contentContainerClassName="p-2 gap-2">
+    // <ScrollView contentContainerClassName="p-2 gap-2">
+    <View className="w-full h-full p-2">
       <View className="w-full h-32 flex items-center justify-center">
         <TouchableOpacity
           className="w-32 h-32 bg-gray-200 rounded-full items-center justify-center"
@@ -375,6 +387,7 @@ const PlusScreen = ({navigation}) => {
             left={{
               icon: 'office-building',
             }}
+            value={userData.company}
           />
         </View>
 
@@ -393,12 +406,13 @@ const PlusScreen = ({navigation}) => {
             left={{
               icon: 'briefcase',
             }}
+            value={userData.job_title}
           />
         </View>
       </View>
 
       <View className="w-full flex flex-row items-center justify-center gap-2 mb-2">
-        <View className="w-2/3">
+        {/* <View className="w-2/3">
           <InputComponent
             label="LinkedIn Username"
             placeholder="Enter your LinkedIn username"
@@ -415,7 +429,7 @@ const PlusScreen = ({navigation}) => {
             }}
             value={userData.linkedin_username}
           />
-        </View>
+        </View> */}
 
         <View className="w-1/3 flex items-center justify-center">
           {linkedUseApi.loading ? (
@@ -427,40 +441,47 @@ const PlusScreen = ({navigation}) => {
                   color: '#0077B5',
                   textDecorationLine: 'underline',
                 }}>
-                Verify Profile
+                Search Profile
               </Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {linkedExtractedData != null && (
-        <View className="w-full">
-          <View className="w-full flex flex-row items-center justify-center gap-2">
-            <View className="w-1/5 flex items-center justify-center">
-              <Image
-                // @ts-ignore
-                source={{uri: linkedExtractedData.profilePicture}}
-                style={{width: 75, height: 75, borderRadius: 50}}
-              />
-            </View>
-            <View className="w-4/5 flex flex-col items-center justify-center">
-              <TextComponent variant={'headlineSmall'}>
-                {linkedExtractedData.firstName} {linkedExtractedData.lastName}
-              </TextComponent>
-              <TextComponent variant={'bodyMedium'}>
-                {linkedExtractedData.headline}
-              </TextComponent>
-              <TextComponent variant={'bodyMedium'}>
-                {linkedExtractedData.location}
-              </TextComponent>
-              <TextComponent variant={'bodyMedium'}>
-                {linkedExtractedData.company}
-              </TextComponent>
+      <FlatList
+        data={linkedProfiles}
+        renderItem={({item}) => (
+          <View className="w-full">
+            <View className="w-full flex flex-row items-center justify-center gap-2">
+              <View className="w-1/5 flex items-center justify-center">
+                <Image
+                  // @ts-ignore
+                  source={{uri: item.image_url}}
+                  style={{width: 75, height: 75, borderRadius: 50}}
+                />
+              </View>
+              <View className="w-4/5 flex flex-col items-center justify-center">
+                <TextComponent variant={'headlineSmall'}>
+                  {item.name}
+                </TextComponent>
+                <TextComponent variant={'bodyMedium'}>
+                  {item.headline}
+                </TextComponent>
+                <TextComponent variant={'bodyMedium'}>
+                  {item.location}
+                </TextComponent>
+                <TextComponent variant={'bodyMedium'}>
+                  {item.company}
+                </TextComponent>
+              </View>
             </View>
           </View>
-        </View>
-      )}
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{gap: 10}}
+        contentContainerClassName="w-full"
+        // className="w-full mb-3"
+      />
 
       <View className="w-full mb-3">
         <ButtonComponent onPress={submitContact}>Submit</ButtonComponent>
@@ -481,12 +502,13 @@ const PlusScreen = ({navigation}) => {
               linkedin_username: '',
               notes: '',
             });
+            setLinkedProfiles([]);
             setPhoto(null);
           }}>
           Reset
         </ButtonComponent>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
