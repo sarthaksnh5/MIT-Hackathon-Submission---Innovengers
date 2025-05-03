@@ -28,7 +28,7 @@ class LinkedInProfileViewSet(viewsets.ModelViewSet):
     def fetch_linkedin(self, request):
         try:
             # Fetch the profile data
-            profile_data = LinkedInService.get_profile_data(request.data['username'])            
+            profile_data = LinkedInService.get_profile_data(request.data['username'], request.data['company'], request.data['job_title'])            
             
             return Response(profile_data)
         except Exception as e:

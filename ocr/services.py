@@ -195,8 +195,10 @@ class OCRService:
         # )
         # # Extract the response text
         # response_text = response.choices[0].message.content
-        # return response_text
-        return LLMBusinessCardProcessor(ocr_text=text).extract_information()
+        # return response_text        
+        data = LLMBusinessCardProcessor(ocr_text=text).extract_information()
+        data = json.dumps(data)
+        return data
     
     @staticmethod
     def process_image(image_path):
@@ -215,11 +217,12 @@ class OCRService:
             
             # Calculate average confidence
             # confidences = [int(conf) for conf in ocr_data['conf'] if conf != '-1']
+            # print("Processing text with OpenAI API...")
             # avg_confidence = sum(confidences) / len(confidences) if confidences else 0
             
             # Get full text
-            # raw_text = pytesseract.image_to_string(img)
-            raw_text = re.findall('(?<=\t(?:8[6-9]|9\d)\t)[a-zA-Z]+(?=,?\.?\n)', arr)
+            raw_text = pytesseract.image_to_string(img)
+            # raw_text = re.findall('(?<=\t(?:8[6-9]|9\d)\t)[a-zA-Z]+(?=,?\.?\n)', arr)
             processed_text = {}
 
             try:
@@ -237,7 +240,7 @@ class OCRService:
             return {
                 'raw_text': raw_text,
                 'processed_text': processed_text,  # Can be further processed if necessary
-                'confidence': avg_confidence / 100.0,
+                'confidence': 0,
             }
         except Exception as e:
             raise Exception(f"OCR processing error: {str(e)}")
